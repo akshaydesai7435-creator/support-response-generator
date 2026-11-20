@@ -2,49 +2,57 @@
 
 [![Built with askThili](https://ask.thili.ai/api/v1/public/projects/7evhnqgg8v/badge.svg)](https://ask.thili.ai/b/7evhnqgg8v)
 
-This Support Response Generator is a CLI tool designed for retail customer support agents. It leverages a next-word prediction model, trained on a corpus of previous support interactions, to offer real-time suggestions, streamlining the drafting of common queries and improving response efficiency.
 
-## What you are building
 
-**Goal.** You will build a command-line interface (CLI) tool that helps customer support agents quickly draft responses by generating next-word suggestions based on past support interactions.
+A small command-line next-word predictor for retail customer-support responses. It trains a trigram (3-gram) language model on a small **synthetic, anonymized sample corpus** and uses add-one (Laplace) smoothing to estimate next-word probabilities.
 
-**Done when.** The tool successfully processes a corpus of customer support interactions, implements an n-gram model with smoothing, generates coherent response continuations, and provides a functional command-line interface for agents to get suggestions.
+## Requirements
 
-## Milestones
+- Python 3.10 or newer
+- No API key, hosted model, or additional Python package is required for the n-gram implementation.
 
-Tick these off as you go, and commit after each one.
-
-- [ ] **1. Prepare an anonymized corpus of customer support interactions.**  
-      Hint: Use text preprocessing and tokenization techniques to clean and structure the data.
-- [ ] **2. Implement the n-gram model with smoothing.**  
-      Hint: Implement n-gram counting and apply a smoothing technique like Laplace smoothing.
-- [ ] **3. Create a text generation function to suggest response continuations.**  
-      Hint: Develop a function that uses the n-gram probabilities to select and suggest the most probable next words.
-- [ ] **4. Build a command-line interface for agents to get suggestions.**  
-      Hint: Utilize standard input/output operations to create an interactive command-line experience.
-
-## Run it
-
-You need Python 3.12 and git.
+## Setup
 
 ```bash
-python3.12 -m venv .venv && source .venv/bin/activate
+python -m venv .venv
+# Windows PowerShell:
+.venv\Scripts\Activate.ps1
+# macOS/Linux:
+# source .venv/bin/activate
 pip install -r requirements.txt
-cp .env.example .env        # then choose a model; see the comments inside
-python -m app.cli hello
-pytest
 ```
 
-Your work goes in `app/core.py` (one stub per milestone) and `tests/test_core.py`. The first tests pass already; they
-check the plumbing.
+## Run
 
-## Settings and secrets
+Check the CLI:
 
-Model settings live in `.env`, which is ignored by git. **Never commit `.env` or paste a key into code.** If a key ever
-reaches GitHub, treat it as leaked and make a new one.
+```bash
+python -m app.cli hello
+```
 
-## Stretch ideas
+Get next-word suggestions and a generated continuation:
 
-- Allow the user to specify the number of next-word suggestions to display.
-- Implement a feature to save the generated response to a text file.
-- Add a simple 'undo' or 'backspace' functionality to modify the current input phrase.
+```bash
+python -m app.cli suggest "thank you for" --count 3 --words 8
+```
+
+Start an interactive session (type `quit` to exit):
+
+```bash
+python -m app.cli interactive
+```
+
+Run tests:
+
+```bash
+python -m pytest -q
+```
+
+## How it works
+
+1. **Corpus preparation:** `data/support_corpus.txt` contains synthetic customer-support messages. The preprocessing pipeline masks common email addresses, phone numbers, and order/ticket identifiers before tokenization.
+2. **N-gram model:** the trigram model counts two-word contexts and their following words. Laplace smoothing adds one to each candidate count, avoiding zero probabilities.
+3. **Text generation:** the model ranks likely next words and can repeatedly append the most likely word to form a short continuation. It backs off to shorter context suffixes when a context has not appeared in training.
+4. **CLI:** `suggest` handles a phrase supplied on the command line; `interactive` lets an agent enter multiple phrases.
+
+The sample corpus is synthetic and contains no real customer records. For real deployment, replace it with an appropriately anonymized and authorized dataset.
